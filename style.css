@@ -22,10 +22,11 @@ nav {
     background-color: var(--bgcolor);
     padding: 15px 50px;
     position: fixed;
-    width: calc(100% - 20px);
+    width: 100%; /* Use full width */
     top: 0;
-    left: -35px;
+    left: 0; /* Remove the negative left value */
     z-index: 1000;
+    box-sizing: border-box; /* Ensure padding doesn't increase the width */
 }
 
 nav a {
