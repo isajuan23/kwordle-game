@@ -1,127 +1,216 @@
-// Word list (example, you can expand it)
-const wordList = ["apple", "grape", "peach", "melon", "berry"];
+import { wordList } from './words.js';
 
-// Game state initialization
+function showMessageBox(message) {
+    const messageBox = document.getElementById('messageBox');
+    const messageText = document.getElementById('messageText');
+    messageText.textContent = message;
+    messageBox.classList.remove('hidden'); 
+    messageBox.classList.add('show'); 
+}
+
+
+function hideMessageBox() {
+    const messageBox = document.getElementById('messageBox');
+    messageBox.classList.remove('show');
+    setTimeout(() => {
+        messageBox.classList.add('hidden'); 
+    }, 300); 
+}
+
+
+document.getElementById('closeButton').addEventListener('click', hideMessageBox);
+
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('closeButton').addEventListener('click', hideMessageBox);
+});
+
+
+showMessageBox('Start Game!');
+
+
+
 let gameState = {
     gameGrid: Array(6).fill().map(() => Array(5).fill('')),
     currentRow: 0,
     currentCol: 0,
     hiddenWord: wordList[Math.floor(Math.random() * wordList.length)],
     score: 0,
-    timeLeft: 120,
+    timeLeft: 45,
     timerInterval: null
 };
 
-// Initialize the game
 function init() {
-    createGameGrid();
+    const gameContainer = document.getElementById('gameContainer');
+    makeGameGrid(gameContainer);
+    console.log(gameState.hiddenWord);
     startTimer();
-    document.body.onkeydown = handleKeyPress;
-    document.getElementById('closeButton').addEventListener('click', hideMessageBox);
+    keyboardpresses();
+    updateScoreBoard();
 }
 
-// Create game grid
-function createGameGrid() {
-    const gameContainer = document.getElementById('gameContainer');
-    for (let row = 0; row < 6; row++) {
-        for (let col = 0; col < 5; col++) {
-            const box = document.createElement('div');
-            box.className = 'charBox';
-            box.id = `charBox-${row}-${col}`;
-            gameContainer.appendChild(box);
+function makeGameGrid(gameContainer) {
+    const gameGrid = document.createElement('div');
+    gameGrid.className = 'gameGrid';
+
+    for (let i = 0; i < 6; i++) {
+        for (let o = 0; o < 5; o++) {
+            makeBox(gameGrid, i, o);
         }
     }
+    gameContainer.appendChild(gameGrid);
 }
 
-// Handle keyboard inputs
-function handleKeyPress(event) {
-    const key = event.key.toLowerCase();
+function makeBox(gameGrid, row, col, letter = '') {
+    const charBox = document.createElement('div');
+    charBox.className = 'charBox';
+    charBox.id = 'charBox.' + row + '' + col;
+    charBox.textContent = letter;
+    gameGrid.appendChild(charBox);
+    return charBox;
+}
 
-    if (key === 'enter') {
-        if (gameState.currentCol === 5) {
-            const enteredWord = getEnteredWord();
-            if (isWordValid(enteredWord)) {
-                checkWord(enteredWord);
-                if (gameState.currentRow === 5 || enteredWord === gameState.hiddenWord) {
-                    showMessageBox(`Game Over! The correct word was: ${gameState.hiddenWord}`);
-                } else {
-                    gameState.currentRow++;
-                    gameState.currentCol = 0;
-                }
+function keyboardpresses() {
+    document.body.onkeydown = (e) => {
+        let key = e.key;
+        if (key === 'Enter') {
+            let word = getEnteredWord();
+            if (isWordValid(word)) {
+                checkLetters();
+                checkTurn(word);
+                gameState.currentRow++;
+                gameState.currentCol = 0;
             } else {
-                showMessageBox("Invalid word! Try again.");
+                alert("The word is invalid");
             }
         }
-    } else if (key === 'backspace') {
-        if (gameState.currentCol > 0) {
-            gameState.currentCol--;
-            gameState.gameGrid[gameState.currentRow][gameState.currentCol] = '';
-            updateGameGrid();
+        if (key === 'Backspace') {
+            deleteLetter();
         }
-    } else if (/^[a-z]$/.test(key) && gameState.currentCol < 5) {
-        gameState.gameGrid[gameState.currentRow][gameState.currentCol] = key;
-        gameState.currentCol++;
+        if (isAlpha(key)) {
+            addLetter(key);
+        }
         updateGameGrid();
+    };
+}
+
+function checkTurn(enteredWord) {
+    let won = gameState.hiddenWord === enteredWord;
+    let gameOver = gameState.currentRow === 5;
+
+    if (won) {
+        gameState.score += 10;
+        updateScoreBoard();
+        showMessageBox('Good job!'); 
+        resetGame(); 
+    } else if (gameOver) {
+        gameState.score = Math.max(0, gameState.score - 5);
+        updateScoreBoard();
+        showMessageBox('Game Over! The word was ' + gameState.hiddenWord + '.');
+        resetGame(); 
     }
 }
 
-// Validate entered word
-function isWordValid(word) {
-    return wordList.includes(word);
-}
 
-// Check entered word against the hidden word
-function checkWord(enteredWord) {
+function checkLetters() {
     for (let i = 0; i < 5; i++) {
-        const box = document.getElementById(`charBox-${gameState.currentRow}-${i}`);
-        const letter = enteredWord[i];
-        if (letter === gameState.hiddenWord[i]) {
-            box.classList.add('correct');
+        let charBox = document.getElementById('charBox.' + gameState.currentRow + '' + i);
+        let letter = charBox.textContent;
+
+        if (letter == gameState.hiddenWord[i]) {
+            charBox.classList.add('correct');
         } else if (gameState.hiddenWord.includes(letter)) {
-            box.classList.add('contains');
+            charBox.classList.add('contains');
+        } else {
+            charBox.classList.add('empty');
         }
     }
 }
 
-// Get the entered word from the game grid
+function isWordValid(getEnteredWord) {
+    return wordList.includes(getEnteredWord);
+}
+
 function getEnteredWord() {
-    return gameState.gameGrid[gameState.currentRow].join('');
+    return gameState.gameGrid[gameState.currentRow].reduce((previous, current) => previous + current);
 }
 
-// Update the game grid visually
 function updateGameGrid() {
-    for (let row = 0; row < 6; row++) {
-        for (let col = 0; col < 5; col++) {
-            const box = document.getElementById(`charBox-${row}-${col}`);
-            box.textContent = gameState.gameGrid[row][col] || '';
+    for (let i = 0; i < gameState.gameGrid.length; i++) {
+        for (let o = 0; o < gameState.gameGrid[i].length; o++) {
+            let charBox = document.getElementById('charBox.' + i + '' + o);
+            charBox.textContent = gameState.gameGrid[i][o];
         }
     }
 }
 
-// Display message box
-function showMessageBox(message) {
-    const messageBox = document.getElementById('messageBox');
-    document.getElementById('messageText').textContent = message;
-    messageBox.classList.remove('hidden');
+function isAlpha(key) {
+    return key.length === 1 && key.match(/[a-z]/i);
 }
 
-// Hide message box
-function hideMessageBox() {
-    const messageBox = document.getElementById('messageBox');
-    messageBox.classList.add('hidden');
+function addLetter(key) {
+    if (gameState.currentCol === 5) return;
+    gameState.gameGrid[gameState.currentRow][gameState.currentCol] = key;
+    gameState.currentCol++;
 }
 
-// Start the game timer
+function deleteLetter() {
+    if (gameState.currentCol === 0) return;
+    gameState.gameGrid[gameState.currentRow][gameState.currentCol - 1] = '';
+    gameState.currentCol--;
+}
+
+function updateScoreBoard() {
+    const scoreElement = document.getElementById('score');
+    const timerElement = document.getElementById('timer');
+
+    if (scoreElement && timerElement) {
+        scoreElement.textContent = gameState.score;
+        timerElement.textContent = gameState.timeLeft + 's';
+    } else {
+        console.error('Score or Timer element not found');
+    }
+}
+
+function resetTileColors() {
+    for (let i = 0; i < gameState.gameGrid.length; i++) {
+        for (let o = 0; o < gameState.gameGrid[i].length; o++) {
+            let charBox = document.getElementById('charBox.' + i + '' + o);
+            charBox.classList.remove('correct', 'contains', 'empty'); 
+        }
+    }
+}
+
+function resetGame() {
+    clearInterval(gameState.timerInterval);
+    gameState.gameGrid = Array(6).fill().map(() => Array(5).fill(''));
+    gameState.currentRow = -1;
+    gameState.currentCol = 0;
+    gameState.hiddenWord = wordList[Math.floor(Math.random() * wordList.length)];
+    resetTileColors(); 
+    resetTimer(); 
+    updateGameGrid();
+}
+
 function startTimer() {
     gameState.timerInterval = setInterval(() => {
         gameState.timeLeft--;
-        document.getElementById('timer').textContent = gameState.timeLeft + 's';
+        updateScoreBoard();
         if (gameState.timeLeft === 0) {
-            showMessageBox(`Time's up! The correct word was: ${gameState.hiddenWord}`);
-            clearInterval(gameState.timerInterval);
+            showMessageBox("Time's up! The game will be reset."); 
+            gameState.score = 0;
+            updateScoreBoard();
+            resetGame();
         }
     }, 1000);
 }
 
-// Start the game
+
+function resetTimer() {
+    clearInterval(gameState.timerInterval);
+    gameState.timeLeft = 45;
+    startTimer(); 
+}
+
 init();
