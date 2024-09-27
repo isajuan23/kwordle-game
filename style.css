@@ -3,9 +3,6 @@
     --empty_tile: #3a3a3c;
     --contains_tile: #b59f3b;
     --correct_tile: #538d4e;
-    --nav-color: #ffffff;
-    --nav-hover-bg: #ffffff;
-    --nav-hover-text: #3086b8;
 }
 
 * {
@@ -22,34 +19,6 @@ body {
 
 html {
     overflow-y: scroll; /* Always show scrollbar */
-}
-
-nav {
-    display: flex;
-    justify-content: flex-end;
-    background-color: var(--bgcolor);
-    padding: 15px 50px;
-    position: fixed;
-    width: 100%; /* Set to full width */
-    top: 0;
-    left: 0; /* Set left to 0 */
-    z-index: 1000;
-}
-
-nav a {
-    color: var(--nav-color);
-    text-decoration: none;
-    margin: 0 20px;
-    padding: 10px 20px;
-    border: 2px solid var(--nav-color);
-    border-radius: 5px;
-    font-size: 1.2rem;
-    transition: background-color 0.3s, color 0.3s;
-}
-
-nav a:hover {
-    background-color: var(--nav-hover-bg);
-    color: var(--nav-hover-text);
 }
 
 header {
