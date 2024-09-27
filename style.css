@@ -63,7 +63,7 @@ header {
     height: 500px;
     display: grid;
     place-items: center;
-    margin-top: 200px;
+    margin-top: 20px;
 }
 
 .gameGrid {
